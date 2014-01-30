@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bocão News</title>
+<script src="js/jquery.min.js"></script>
+<!--[if lt IE 9]>
+<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+<link href="css/layout.css" rel="stylesheet" type="text/css" />
+<link href='http://fonts.googleapis.com/css?family=Roboto+Condensed' rel='stylesheet' type='text/css'>
+
+<link rel="stylesheet" href="css/fontello.css">
+<link rel="stylesheet" href="css/animation.css"><!--[if IE 7]>
+<link rel="stylesheet" href="css/fontello-ie7.css"><![endif]-->
+<script type="text/javascript" charset="utf-8" src="phonegap.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/jquery.validate.js"></script>
+<script type="text/javascript">
+
+function onBodyLoad()
+{       
+	document.addEventListener("deviceready", onDeviceReady, false);
+}
+
+function onDeviceReady()
+{
+	var onSuccess = function(position) {
+	console.log(position);
+    document.getElementById('map').src="http://maps.googleapis.com/maps/api/staticmap?center="+ position.coords.latitude +","+ position.coords.longitude +"&amp;zoom=11&amp;size=300x300&amp;sensor=false";
+
+	}
+	
+	// onError Callback receives a PositionError object
+
+        function onError(error) {
+        alert('code: '    + error.code    + 'n' +
+          'message: ' + error.message + 'n');
+        }
+
+        navigator.geolocation.getCurrentPosition(onSuccess, onError);
+}
+
+$(document).bind( "mobileinit", function(){$.mobile.touchOverflowEnabled = true;});
+
+$(function(){
+	var pagina = location.hash.split('#')[1],
+		id = location.hash.split('#')[2];
+	
+	$("#noticiaComentID").val(id);
+	
+	var dominio = "http://www.bocaonews.com.br";
+	
+	$.getJSON("http://bocaonews.com.br/android/json.php?menu=comentarios&id="+id,function(resultados) {
+		
+		  if(resultados != "0"){
+			  $.each(resultados, function(i, comentarios) {
+				$html = '<li>';
+				$html += '<h3><i class="icon-chat-3"></i>'+comentarios.NOME_COMENTARIO+'</h3>';
+				$html += '<div class="clear"></div>';
+				$html += '<div class="txt-comenatio">'+comentarios.COMENTARIO_COMENTARIO+'</div>';
+				$html += '<div class="info-comentario">';
+				$html += '<span class="floatLeft"><i class="icon-location-1"></i> '+comentarios.CIDADE_COMENTARIO+' </span> <span class="floatRight">'+comentarios.DATA_COMENTARIO+'</span>';
+				$html += '<div class="clear"></div></div></li>';
+				
+				$("#list-comentarios").append($html); 
+			  });
+		  }else{
+			  	$("#list-comentarios").append("Nenhum Registro foi encontrado.");  
+		  }
+		  
+	  });
+	
+	  $.getJSON("http://bocaonews.com.br/android/json.php?menu="+pagina+"&id="+id,function(data) {
+		  if(data != "0"){
+			  $.each(data, function(i, noticias) {
+				$html = '<div class="interna">';
+				$html += '<div class="i-noticia">';
+				$html += '<span class="date floatLeft"><strong>'+noticias.DESC_CATEGORIA+'</strong></span><span class="boxDate floatRight">'+noticias.DATA_NOTICIA+'</span><div class="clear"></div>';
+				$html += '<h1 class="titulo">'+noticias.TITULO_NOTICIA+'</h1>';
+				$html += '<div class="clear"></div><div class="editor">'+noticias.NOTICIA_NOTICIA+'</div>';
+				$html += '<div class="clear"></div>';
+	
+				$html += '</div>';
+				$html += '</div>';
+				
+				$("#noticias").append($html); 
+				var $maxWidth = $(".interna").innerWidth();
+				$("#noticias").find("img").css({
+												"max-width":($maxWidth-10)+"px",
+												"height":"auto",
+												"float" : "none",
+												"margin" : "auto",
+												});
+			  });
+		  }else{
+			  	$("#noticias").append("Nenhum Registro foi encontrado.");  
+		  }
+		  
+	  });
+	  
+	  
+	  
+	  
+	  $("a[href^='#']").on("click", function(e){
+		 e.preventDefault(); 
+		 var linkHash = $(this).attr("href");
+		 
+		 if($(linkHash).length){
+			$(linkHash).animate({"height": "show"}, "fast");
+		 }
+		 
+	  });
+	  
+	  $(".hideButton").on("click", function(e){
+		 e.preventDefault(); 
+		 
+		 $(this).parents(".section").animate({"height": "hide"}, "fast");
+		 
+	  });
+	  
+	  $(".validate").validate({
+			submitHandler: function(form){
+				
+				$.post("http://bocaonews.com.br/android/ajax.php",$(form).serialize(), function(msg){
+					msg=msg.replace(/\+/g," ");
+					msg=unescape(msg);
+					$("#retornoAjax").html(msg);
+					form.reset();
+				});	
+			}
+	  });
+	  
+	  
+});
+</script>
+
+</head>
+
+<body  onload="onBodyLoad()">
+<div class="nav-bar">
+<a href="index.html" class="backButton"><span class="lArrow"></span>Últimas Notícias</a> <div class="floatRight"><a href="#box-list-comentarios" class="bt-comentarios"><i class=" icon-chat-1"></i></a></div>
+<div class="clear"></div>
+</div>
+<ul class="list-noticias" id="noticias">
+	
+</ul>
+<div class="menu">
+
+</div>
+<div id="box-list-comentarios" class="hide section">
+	<div class="nav-bar">
+    <a href="#" class="backButton hideButton"><span class="lArrow"></span>Voltar</a> <div class="floatRight"><a href="#comentar" class="backButton"><i class=" icon-chat-1"></i> Comentar</a></div>
+    <div class="clear"></div>
+    </div>
+	<ul class="list list-comentarios" id="list-comentarios">
+    	
+    </ul>
+</div>
+
+<div class="section hide" id="comentar">
+<h2>Comentar</h2>
+<form method="post" name="comentario" class="form_padrao validate" action="#">
+    <input type="hidden" name="COD_NOTICIA" value="" id="noticiaComentID"/>
+    <input type="text" placeholder="Nome:" name="nome" class="required" />
+    <input type="email" placeholder="Email:" name="email" class="required email"/>
+    <input type="text" placeholder="Cidade:" name="cidade" class="required"/>
+    <textarea name="mensagem" placeholder="Mensagem:" class="required"></textarea>
+    <input type="submit" value="Comentar" name="submit">
+</form>
+<div id="retornoAjax"></div>
+</div>
+
+</body>
+</html>

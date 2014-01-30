@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, target-densitydpi=medium-dpi, user-scalable=0" />
+<title>Bocão News</title>
+<script src="js/jquery.min.js"></script>
+<!--[if lt IE 9]>
+<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+<link href="css/layout.css" rel="stylesheet" type="text/css" />
+<link href='http://fonts.googleapis.com/css?family=Roboto+Condensed' rel='stylesheet' type='text/css'>
+
+<link rel="stylesheet" href="css/fontello.css">
+<link rel="stylesheet" href="css/animation.css"><!--[if IE 7]>
+<link rel="stylesheet" href="css/fontello-ie7.css"><![endif]-->
+
+
+
+<script type="text/javascript" charset="utf-8" src="phonegap.js"></script>
+<script type="text/javascript">
+
+function onBodyLoad()
+{       
+	document.addEventListener("deviceready", onDeviceReady, false);
+}
+
+function onDeviceReady()
+{
+	/*// do your thing!
+	navigator.notification.alert("PhoneGap is working")*/
+}
+
+</script>
+<script type="text/javascript">
+
+$(function(){
+	
+	var dominio = "http://www.bocaonews.com.br";
+	
+	var carregamento = function (status, idLocal){
+		
+		if(status){
+			$(idLocal).attr("data-status", "1");
+		}else{
+			$(idLocal).attr("data-status", "0");
+		}
+		return false; 
+	}
+	
+	var preLoader = function (mostra, idLocal, carrega, scroll){
+			if(mostra){
+			$('.loading').stop(true,true).fadeIn();
+		}else{
+			$('.loading').stop(true,true).fadeOut("slow", function(){
+				if(scroll){
+					console.log(scroll);
+					$("html,body").stop(true,true).animate({
+						scrollTop : scroll.offset().top+scroll.height()
+						},'slow', function(){
+					
+					if(carrega){
+						setTimeout(function(){
+							carregamento(false, idLocal);
+							return false; 
+						}, 500);
+						
+					}
+					
+					});
+				}else{
+					if(carrega){
+						setTimeout(function(){
+							carregamento(false, idLocal);
+							return false; 
+						}, 500);
+						
+					}	
+				}
+				
+			});
+		}
+		return false;
+	}
+	
+	
+	var getNoticias = function(pag, scroll){
+			scroll = scroll == undefined ? false : scroll;
+			pag = pag == undefined || pag == "" ? 0 : pag;
+			
+			var status = $("#noticias").attr("data-status"),
+			idLocal = "#noticias";
+			
+			if(status == undefined  || status == "0"){
+				$(idLocal).find("li:last").addClass("last");
+				preLoader(true, idLocal, true, scroll);
+				
+				//$("html,body").stop(true,true).animate({scrollTop : $(window).scrollTop()+60},'slow');
+				
+					carregamento(true, idLocal);
+					
+					$.getJSON("http://bocaonews.com.br/android/json.php?menu=noticias&num_pag="+pag,function(data) {
+						var count = data.length,
+							i =0;
+						var $scrollTo = $(idLocal).find("li:last-child");
+					  $.each(data, function(i, noticias) {
+						$html = '<li>';
+						$html += '<div class="i-noticia">';
+						$html += '<a href="noticia.html#noticias#'+noticias.COD_NOTICIA+'">';
+						if(noticias.IMAGEM_NOTICIA)
+							$html += '<img src="'+dominio+'/fotos/noticias/'+noticias.COD_NOTICIA+'/IMAGEM_NOTICIA_2.jpg" width="95" />';
+						$html += '<header>';
+						$html += '<p class="desc">'+noticias.DESC_CATEGORIA+'</p>';
+						$html += '<span class="date">'+noticias.DATA_NOTICIA+'</span>';
+						$html += '<h1 class="titulo">'+noticias.TITULO_NOTICIA+'</h1>';
+						$html += '</header>';
+						$html += '<div class="clear"></div>';
+						$html += '<div class="box-comment">';
+						$html += '<div class="icon-comentario">'+noticias.QTD+'</div>';
+						$html += '<i class="arrowOpen icon-right-open"></i>';
+						$html += '<div class="clear"></div>';
+						$html += '</div>';
+						$html += '<div class="clear"></div>';
+						$html += '</a>';
+						$html += '</div>';
+						$html += '</li>';
+						
+						console.log($scrollTo);	
+						if(data == 0){
+							$(idLocal).append('<div class="clear" style="text-align: center; color:#ccc; font-size:25px;">&bull;</div>').fadeIn('slow');
+							preLoader(false, idLocal, false, $scrollTo);
+						}else{
+							if(i == (count-1)){
+								preLoader(false, idLocal, true , $scrollTo);
+							}
+							//setTimeout(function(){
+							$("#noticias").append($html);
+							$("ul.list-noticias li:last-child").attr("data-pagina", (pag+1));
+							//}, 1000);
+						}
+						
+						
+						
+						
+					  });
+					  
+					  
+				});
+		}
+	}
+	
+	getNoticias();
+	
+	$(window).on("scroll", function(e){
+		if(($(window).scrollTop() + $(window).height() + 80) >= $(document).height()){
+			var pag = $("ul.list-noticias li:last-child").data("pagina") != undefined ? $("ul.list-noticias li:last-child").data("pagina") : 0;
+		
+			if(pag != 0){
+				getNoticias(pag, true);
+			}
+		}
+	});
+
+});
+</script>
+</head>
+
+<body onload="onBodyLoad()">
+
+<ul class="list-noticias" id="noticias" >
+	
+</ul>
+<div class="loading hide" align="center"><img src="imagens/loading.gif"></div>
+<div class="menu">
+
+</div>
+</body>
+</html>
